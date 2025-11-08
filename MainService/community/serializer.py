@@ -12,6 +12,8 @@ class CommunitySerializer(serializers.Serializer):
 
     def create(self, data):
         data["id"] = 'generate_id'
+        creator = data.pop("creator")
+        data["creator_id"] = creator
 
         return Community.objects.create(**data)
 

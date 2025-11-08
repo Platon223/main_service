@@ -6,6 +6,8 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from .serializer import CommunitySerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+import requests
+from django.conf import settings
 
 # Create your views here.
 
@@ -32,9 +34,18 @@ def find_community(request):
 
 @api_view(["POST"])
 def create_community(request):
+    user_username = getattr(request, "username", None)
+
+    response = requests.get(f"{settings.API_GATEWAY_URL}/find_by_username")
+    if response.status_code == 200:
+        user_id_json = response.json()
+    else:
+        return JsonResponse({"message": "something went wrong"}, status=response.status_code)
+    
     serializer = CommunitySerializer(data=request.data)
+
     if serializer.is_valid():
-        serializer.save()
+        serializer.save(creator=user_id_json.get("user_id"))
         return JsonResponse({"message": "success"}, status=200)
     return JsonResponse({"message": f"error occured: {serializer.errors}"}, status=400)
 
@@ -44,8 +55,11 @@ def join_community(request):
     comm_id = json_data.get("comm_id")
     user_username = getattr(request, "username", None)
 
-    community = Community.objects.get(pk=comm_id)
-    community_creator_id = community.creator_id
+    try:
+        community = Community.objects.get(pk=comm_id)
+        community_creator_id = community.creator_id
+    except Community.DoesNotExist:
+        return JsonResponse({"message": "Community not found"})
 
     # Send a message to the queue for the auth service
 
