@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import requests
 from django.conf import settings
+from .fetch import call_service
 
 # Create your views here.
 
@@ -36,23 +37,21 @@ def find_community(request):
 def create_community(request):
     user_username = getattr(request, "username", None)
 
-    response = requests.get(f"{settings.API_GATEWAY_URL}/find_by_username")
-    if response.status_code == 200:
-        user_id_json = response.json()
-    else:
-        return JsonResponse({"message": "something went wrong"}, status=response.status_code)
+    res = call_service("auth", "find_by_username")
+    if res.status_code != 200:
+        return JsonResponse({"message": "something went wrong"}, status=res.status_code)
     
     serializer = CommunitySerializer(data=request.data)
 
     if serializer.is_valid():
-        serializer.save(creator=user_id_json.get("user_id"))
+        serializer.save(creator=res.json().get("user_id"))
 
         if request.data.get("private"):
             try:
-                current_community = Community.objects.get(creator_id=user_id_json.get("user_id"))
+                current_community = Community.objects.get(creator_id=res.json().get("user_id"))
             except Community.DoesNotExist:
                 return JsonResponse({"message": "community not found"}, status=404)
-            users_allowed_serializer = UsersAllowedSerializer(data={"user_id": user_id_json.get("user_id"), "community_id": current_community.id})
+            users_allowed_serializer = UsersAllowedSerializer(data={"user_id": res.json().get("user_id"), "community_id": current_community.id})
             if users_allowed_serializer.is_valid():
                 users_allowed_serializer.save()
             else:

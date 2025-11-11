@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from jwt.exceptions import InvalidTokenError, DecodeError
 from .models import UsersAllowed, Community
 import requests
+from .fetch import call_service
 
 class JWTAuthMiddleware:
     def __init__(self, get_response):
@@ -33,6 +34,11 @@ class CommunityAccessMiddleware:
         community_id = json_data.get("comm_id")
         user_username = getattr(request, "username", None)
 
+        res = call_service("auth", "find_by_username")
+        if res.status_code != 200:
+            return JsonResponse({"message": "something went wrong"}, status=res.status_code)
+
+
         try:
             community = Community.objects.get(pk=community_id)
             if not community.private:
@@ -47,7 +53,7 @@ class CommunityAccessMiddleware:
             return res
 
         try:
-            user_allowed = UsersAllowed(pk=user_id, community_id=community_id)
+            user_allowed = UsersAllowed(pk=res.json().get("user_id"), community_id=community_id)
         except UsersAllowed.DoesNotExist:
             return JsonResponse({"message": "user not allowed"}, status=401)
         
