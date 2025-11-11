@@ -12,3 +12,10 @@ class Community(models.Model):
 
     def __str__(self):
         return self.id
+
+class UsersAllowed(models.Model):
+    user_id = models.TextField(primary_key=True)
+    community_id = models.TextField()
+
+    def __str__(self):
+        return self.user_id

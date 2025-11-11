@@ -3,7 +3,7 @@ from .models import Community
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.http import JsonResponse, HttpResponseBadRequest
-from .serializer import CommunitySerializer
+from .serializer import CommunitySerializer, UsersAllowedSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import requests
@@ -46,6 +46,18 @@ def create_community(request):
 
     if serializer.is_valid():
         serializer.save(creator=user_id_json.get("user_id"))
+
+        if request.data.get("private"):
+            try:
+                current_community = Community.objects.get(creator_id=user_id_json.get("user_id"))
+            except Community.DoesNotExist:
+                return JsonResponse({"message": "community not found"}, status=404)
+            users_allowed_serializer = UsersAllowedSerializer(data={"user_id": user_id_json.get("user_id"), "community_id": current_community.id})
+            if users_allowed_serializer.is_valid():
+                users_allowed_serializer.save()
+            else:
+                return JsonResponse({"message": f"error occured: {users_allowed_serializer.errors}"}, status=400)
+            
         return JsonResponse({"message": "success"}, status=200)
     return JsonResponse({"message": f"error occured: {serializer.errors}"}, status=400)
 
@@ -64,6 +76,12 @@ def join_community(request):
     # Send a message to the queue for the auth service
 
     return JsonResponse({"message": f"notification sent to: {community_creator_id}, {user_username} is waiting for response"})
+
+@api_view(["POST"])
+def allow_users_join(request):
+    json_data = request.data
+    community_id = json_data.get("comm_id")
+    user_username = getattr(request, "username", None)
 
 
 

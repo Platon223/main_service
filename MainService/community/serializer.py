@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Community
+from .models import Community, UsersAllowed
 
 
 class CommunitySerializer(serializers.Serializer):
@@ -16,4 +16,11 @@ class CommunitySerializer(serializers.Serializer):
         data["creator_id"] = creator
 
         return Community.objects.create(**data)
+
+class UsersAllowedSerializer(serializers.Serializer):
+    user_id = serializers.CharField()
+    community_id = serializers.CharField()
+
+    def create(self, data):
+        return UsersAllowed.objects.create(**data)
 
