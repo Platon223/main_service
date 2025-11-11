@@ -30,6 +30,10 @@ class CommunityAccessMiddleware:
         self.get_response = get_response
     
     def __call__(self, request):
+        if request.path_info in ["/community/create"]:
+            res = self.get_response(request)
+            return res
+        
         json_data = request.data
         community_id = json_data.get("comm_id")
         user_username = getattr(request, "username", None)
@@ -37,7 +41,8 @@ class CommunityAccessMiddleware:
         res = call_service("auth", "find_by_username", {"username": user_username})
         if res.status_code != 200:
             return JsonResponse({"message": "something went wrong"}, status=res.status_code)
-
+        
+        request.id = res.json().get("user_id")
 
         try:
             community = Community.objects.get(pk=community_id)
@@ -46,11 +51,6 @@ class CommunityAccessMiddleware:
                 return res
         except Community.DoesNotExist:
             return JsonResponse({"message": "community not found"}, status=404)
-
-
-        if request.path_info in ["/community/create"]:
-            res = self.get_response(request)
-            return res
 
         try:
             user_allowed = UsersAllowed(pk=res.json().get("user_id"), community_id=community_id)
