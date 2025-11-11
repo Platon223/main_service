@@ -34,7 +34,7 @@ class CommunityAccessMiddleware:
         community_id = json_data.get("comm_id")
         user_username = getattr(request, "username", None)
 
-        res = call_service("auth", "find_by_username")
+        res = call_service("auth", "find_by_username", {"username": user_username})
         if res.status_code != 200:
             return JsonResponse({"message": "something went wrong"}, status=res.status_code)
 

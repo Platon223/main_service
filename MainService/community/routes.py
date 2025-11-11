@@ -37,7 +37,7 @@ def find_community(request):
 def create_community(request):
     user_username = getattr(request, "username", None)
 
-    res = call_service("auth", "find_by_username")
+    res = call_service("auth", "find_by_username", {"username": user_username})
     if res.status_code != 200:
         return JsonResponse({"message": "something went wrong"}, status=res.status_code)
     
