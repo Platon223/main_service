@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_list_or_404
-from .models import Community
+from .models import Community, UsersAllowed
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.http import JsonResponse, HttpResponseBadRequest
@@ -80,7 +80,28 @@ def join_community(request):
 def allow_users_join(request):
     json_data = request.data
     community_id = json_data.get("comm_id")
-    user_username = getattr(request, "username", None)
+    allowed_user_id = json_data.get("allowed_user")
+    user_id = getattr(request, "id", None)
+
+    try:
+        community = Community.objects.get(pk=community_id, creator_id=user_id)
+
+        if UsersAllowed.objects.filter(user_id=allowed_user_id).exists():
+            return JsonResponse({"message": "user is already allowed"}, status=400)
+
+        UsersAllowed.objects.create(user_id=allowed_user_id, community_id=community_id)
+    except Community.DoesNotExist:
+        return JsonResponse({"message": "user is not a creator"}, status=401)
+    
+    return JsonResponse({"message": "user allowed successufully"}, status=200)
+    
+
+    
+
+
+
+
+
 
 
 
