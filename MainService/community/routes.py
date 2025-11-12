@@ -94,6 +94,18 @@ def allow_users_join(request):
         return JsonResponse({"message": "user is not a creator"}, status=401)
     
     return JsonResponse({"message": "user allowed successufully"}, status=200)
+
+@api_view(["DELETE"])
+def delete_allowed_user(request):
+    json_data = request.data
+    deleted_user = json_data.get("delete_user")
+    creator_id = getattr(request, "id", None)
+    community_id = json_data.get("comm_id")
+
+    try:
+        pass
+    except:
+        pass
     
 
     
