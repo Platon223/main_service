@@ -75,11 +75,11 @@ def join_community(request):
         community = Community.objects.get(pk=comm_id)
         community_creator_id = community.creator_id
     except Community.DoesNotExist:
-        return JsonResponse({"message": "Community not found"})
+        return JsonResponse({"message": "Community not found"}, status=404)
 
-    # Send a message to the queue for the auth service
+    # Send a message to the queue for the auth service and the notification service
 
-    return JsonResponse({"message": f"notification sent to: {community_creator_id}, {user_username} is waiting for response"})
+    return JsonResponse({"message": f"notification sent to: {community_creator_id}, {user_username} is waiting for response"}, status=200)
 
 # Endpoint for the creator to allow speciffic users to join 
 @api_view(["POST"])
@@ -116,13 +116,16 @@ def delete_allowed_user(request):
     try:
         community = Community.objects.get(pk=community_id, creator_id=creator_id)
 
+        if not community.private:
+            return JsonResponse({"message": "community is public"}, status=401)
+
         UsersAllowed.objects.get(user_id=deleted_user, community_id=community_id).delete()
     except Community.DoesNotExist:
         return JsonResponse({"message": "user is not a creator"}, status=401)
     except UsersAllowed.DoesNotExist:
         return JsonResponse({"message": "no such user"}, status=404)
 
-    return JsonResponse({"message": "user deleted successufully"})
+    return JsonResponse({"message": "user deleted successufully"}, status=200)
 
     
 
