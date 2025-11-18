@@ -13,7 +13,7 @@ from .fetch import call_service
 # Create your views here.
 
 # Endpoint for finding a speciffic community
-@api_view(["GET"])
+@api_view(["POST"])
 def find_community(request):
     try:
         unicode = request.body.decode('utf-8')
