@@ -27,7 +27,7 @@ API_GATEWAY_URL = 'http://localhost:5555/'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["http://gateway_service:3333"]
+ALLOWED_HOSTS = ["http://localhost:3333"]
 
 
 # Application definition
